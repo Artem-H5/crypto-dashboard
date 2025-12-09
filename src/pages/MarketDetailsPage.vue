@@ -1,13 +1,158 @@
 <script setup lang="ts">
+import { computed, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
+import { markets } from '../mock/markets';
+import { useTradingStore } from '../stores/trading';
 
 const route = useRoute();
-const symbol = route.params.symbol;
+const tradingStore = useTradingStore();
+
+const symbol = computed(() => String(route.params.symbol));
+
+const market = computed(() => markets.find((m) => m.symbol === symbol.value));
+
+const type = ref<'BUY' | 'SELL'>('BUY');
+const price = ref(market.value?.price ?? 0);
+const amount = ref(0);
+const errorMessage = ref<string | null>(null);
+
+const total = computed(() => {
+  return price.value * amount.value;
+});
+
+const maxAmount = computed(() => {
+  const usdtBalance = tradingStore.balances['USDT'] ?? 0;
+  const assetBalance = tradingStore.balances[symbol.value] ?? 0;
+
+  if (type.value === 'SELL') {
+    return assetBalance;
+  }
+
+  if (type.value === 'BUY' && price.value > 0) {
+    return Number((usdtBalance / price.value).toFixed(6));
+  }
+
+  return 0;
+});
+
+const setMax = () => {
+  amount.value = maxAmount.value;
+};
+
+const submitOrder = () => {
+  if (!market.value) {
+    errorMessage.value = 'Market not found.';
+    return;
+  }
+
+  const err = tradingStore.placeOrder({
+    symbol: symbol.value,
+    type: type.value,
+    price: price.value,
+    amount: amount.value,
+  });
+
+  if (err) {
+    errorMessage.value = err;
+  } else {
+    errorMessage.value = null;
+    amount.value = 0;
+  }
+};
+
+watch(type, () => {
+  errorMessage.value = null;
+});
 </script>
 
 <template>
   <div>
-    <h1>Market: {{ symbol }}</h1>
-    <p>Here will be the chart and order form...</p>
+    <h1 class="mb-4">
+      {{ market ? market.name : 'Unknown market' }}
+      <span v-if="market">({{ market.symbol }})</span>
+    </h1>
+
+    <div v-if="market">
+      <p class="mb-4">
+        Current price: <strong>${{ market.price.toLocaleString() }}</strong>
+      </p>
+
+      <v-card class="mb-4" flat>
+        <v-card-title>Place order</v-card-title>
+
+        <v-card-text>
+          <div class="d-flex align-center mb-4" style="gap: 8px">
+            <v-btn
+              :color="type === 'BUY' ? 'success' : undefined"
+              variant="elevated"
+              @click="type = 'BUY'"
+            >
+              BUY
+            </v-btn>
+
+            <v-btn
+              :color="type === 'SELL' ? 'error' : undefined"
+              variant="elevated"
+              @click="type = 'SELL'"
+            >
+              SELL
+            </v-btn>
+          </div>
+
+          <v-row>
+            <v-col cols="12" md="4">
+              <v-text-field
+                v-model.number="price"
+                type="number"
+                label="Price"
+              />
+            </v-col>
+
+            <v-col cols="12" md="4">
+              <v-text-field
+                v-model.number="amount"
+                type="number"
+                label="Amount"
+              >
+                <template #append-inner>
+                  <v-btn variant="text" size="x-small" @click="setMax">
+                    All
+                  </v-btn>
+                </template>
+              </v-text-field>
+            </v-col>
+          </v-row>
+
+          <p class="mt-2">
+            Total: <strong>${{ total.toFixed(2) }}</strong>
+          </p>
+
+          <p class="mt-2">
+            Your {{ symbol }} balance:
+            <strong>{{ tradingStore.balances[symbol] ?? 0 }}</strong>
+            <br />
+            Your USDT balance:
+            <strong>{{ tradingStore.balances['USDT'] ?? 0 }}</strong>
+          </p>
+
+          <p v-if="errorMessage" class="mt-2" style="color: red">
+            {{ errorMessage }}
+          </p>
+        </v-card-text>
+
+        <v-card-actions>
+          <v-btn
+            :color="type === 'BUY' ? 'success' : 'error'"
+            @click="submitOrder"
+          >
+            {{ type === 'BUY' ? 'Buy' : 'Sell' }} {{ symbol }}
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </div>
+
+    <div v-else>
+      <p>Market not found.</p>
+    </div>
   </div>
 </template>
