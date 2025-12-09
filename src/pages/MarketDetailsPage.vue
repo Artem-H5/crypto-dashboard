@@ -3,6 +3,7 @@ import { computed, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { markets } from '../mock/markets';
 import { useTradingStore } from '../stores/trading';
+import PriceChart from '../components/PriceChart.vue';
 
 const route = useRoute();
 const tradingStore = useTradingStore();
@@ -35,6 +36,17 @@ const maxAmount = computed(() => {
   return 0;
 });
 
+const historyLabels = computed(() => {
+  if (!market.value) return [];
+
+  const len = market.value.history.length;
+  return market.value.history.map((_, index) => {
+    if (index === len - 1) return 'Now';
+    const diff = len - 1 - index;
+    return `T-${diff}`;
+  });
+});
+
 const setMax = () => {
   amount.value = maxAmount.value;
 };
@@ -62,6 +74,7 @@ const submitOrder = () => {
 
 watch(type, () => {
   errorMessage.value = null;
+  amount.value = 0;
 });
 </script>
 
@@ -76,6 +89,15 @@ watch(type, () => {
       <p class="mb-4">
         Current price: <strong>${{ market.price.toLocaleString() }}</strong>
       </p>
+
+      <v-card class="mb-4" elevation="2">
+        <v-card-title
+          >Price (last {{ market.history.length }} points)</v-card-title
+        >
+        <v-card-text>
+          <PriceChart :prices="market.history" :labels="historyLabels" />
+        </v-card-text>
+      </v-card>
 
       <v-card class="mb-4" flat>
         <v-card-title>Place order</v-card-title>
