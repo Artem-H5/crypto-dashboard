@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useTradingStore } from '../stores/trading';
+import { markets } from '../mock/markets';
 
 const tradingStore = useTradingStore();
+
+const balances = computed(() => tradingStore.balances);
 
 const nonZeroBalances = computed(() => {
   return Object.fromEntries(
@@ -13,11 +16,35 @@ const nonZeroBalances = computed(() => {
 const trades = computed(() =>
   [...tradingStore.trades].sort((a, b) => b.id - a.id)
 );
+
+const priceMap = computed(() => {
+  const map: Record<string, number> = { USDT: 1 };
+
+  markets.forEach((m) => {
+    map[m.symbol] = m.price;
+  });
+
+  return map;
+});
+
+const totalValue = computed(() => {
+  return Object.entries(balances.value).reduce((sum, [asset, amount]) => {
+    const price = priceMap.value[asset] ?? 0;
+    return sum + amount * price;
+  }, 0);
+});
 </script>
 
 <template>
   <div>
     <h1 class="mb-4">Portfolio</h1>
+
+    <v-card class="mb-6" elevation="2">
+      <v-card-title>Total portfolio value</v-card-title>
+      <v-card-text>
+        <div class="text-h5">${{ totalValue.toFixed(2) }}</div>
+      </v-card-text>
+    </v-card>
 
     <h2 class="mb-2">Balances</h2>
 
