@@ -27,11 +27,21 @@ if (saved === 'light' || saved === 'dark') {
       <v-spacer />
 
       <RouterLink to="/markets">
-        <v-btn variant="text" class="mx-2">Markets</v-btn>
+        <v-btn
+          variant="text"
+          class="mx-2"
+          :class="{ 'nav-link--active': $route.path.startsWith('/markets') }"
+          >Markets</v-btn
+        >
       </RouterLink>
 
       <RouterLink to="/portfolio">
-        <v-btn variant="text" class="mx-2">Portfolio</v-btn>
+        <v-btn
+          variant="text"
+          class="mx-2"
+          :class="{ 'nav-link--active': $route.path.startsWith('/portfolio') }"
+          >Portfolio</v-btn
+        >
       </RouterLink>
 
       <v-btn variant="text" icon @click="toggleTheme">
@@ -61,5 +71,9 @@ a {
 
 a:hover {
   opacity: 0.7;
+}
+
+.nav-link--active {
+  color: #f5b301;
 }
 </style>

@@ -85,6 +85,10 @@ watch(type, () => {
       <span v-if="market">({{ market.symbol }})</span>
     </h1>
 
+    <v-btn variant="text" icon @click="$router.push('/markets')" class="mb-4">
+      <v-icon>mdi-arrow-left</v-icon>
+    </v-btn>
+
     <div v-if="market">
       <p class="mb-4">
         Current price: <strong>${{ market.price.toLocaleString() }}</strong>
