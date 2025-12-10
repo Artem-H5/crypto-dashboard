@@ -14,6 +14,29 @@ import { createPinia } from 'pinia';
 const vuetify = createVuetify({
   components,
   directives,
+  theme: {
+    defaultTheme: 'light',
+    themes: {
+      light: {
+        dark: false,
+        colors: {
+          background: '#f5f5f5',
+          primary: '#F5B301',
+          surface: '#ffffff',
+          success: '#22c55e',
+          error: '#ef4444',
+        },
+      },
+      dark: {
+        dark: true,
+        colors: {
+          primary: '#F5B301',
+          success: '#22c55e',
+          error: '#ef4444',
+        },
+      },
+    },
+  },
 });
 
 const pinia = createPinia();

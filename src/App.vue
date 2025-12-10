@@ -1,11 +1,28 @@
 <script setup lang="ts">
 import { RouterLink, RouterView } from 'vue-router';
+import { useTheme } from 'vuetify';
+
+const theme = useTheme();
+
+const toggleTheme = () => {
+  const current = theme.global.current.value;
+
+  theme.change(current.dark ? 'light' : 'dark');
+  localStorage.setItem('theme', current.dark ? 'light' : 'dark');
+};
+
+const saved = localStorage.getItem('theme');
+if (saved === 'light' || saved === 'dark') {
+  theme.change(saved);
+}
 </script>
 
 <template>
   <v-app>
-    <v-app-bar app color="primary" dark>
-      <v-app-bar-title>Crypto Dashboard</v-app-bar-title>
+    <v-app-bar app elevation="1">
+      <v-app-bar-title class="font-weight-bold">
+        <span class="text-primary">Crypto</span> Dashboard
+      </v-app-bar-title>
 
       <v-spacer />
 
@@ -16,6 +33,16 @@ import { RouterLink, RouterView } from 'vue-router';
       <RouterLink to="/portfolio">
         <v-btn variant="text" class="mx-2">Portfolio</v-btn>
       </RouterLink>
+
+      <v-btn variant="text" icon @click="toggleTheme">
+        <v-icon>
+          {{
+            theme.global.name.value === 'light'
+              ? 'mdi-moon-waning-crescent'
+              : 'mdi-white-balance-sunny'
+          }}
+        </v-icon>
+      </v-btn>
     </v-app-bar>
 
     <v-main>
