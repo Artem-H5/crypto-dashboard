@@ -1,9 +1,15 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, onMounted } from 'vue';
 import { useTradingStore } from '../stores/trading';
-import { markets } from '../mock/markets';
+import { useApi } from '../composables/useApi';
 
 const tradingStore = useTradingStore();
+
+const { markets, loading, error, loadMarkets } = useApi();
+
+onMounted(() => {
+  loadMarkets();
+});
 
 const balances = computed(() => tradingStore.balances);
 
@@ -20,7 +26,7 @@ const trades = computed(() =>
 const priceMap = computed(() => {
   const map: Record<string, number> = { USDT: 1 };
 
-  markets.forEach((m) => {
+  markets.value.forEach((m) => {
     map[m.symbol] = m.price;
   });
 
@@ -33,6 +39,10 @@ const totalValue = computed(() => {
     return sum + amount * price;
   }, 0);
 });
+
+const getMarketBySymbol = (symbol: string) => {
+  return markets.value.find((m) => m.symbol === symbol);
+};
 </script>
 
 <template>
@@ -43,6 +53,10 @@ const totalValue = computed(() => {
       <v-card-title>Total portfolio value</v-card-title>
       <v-card-text>
         <div class="text-h5">${{ totalValue.toFixed(2) }}</div>
+        <div v-if="loading" class="mt-2 text-caption">Updating prices...</div>
+        <div v-if="error" class="mt-2 text-caption" style="color: red">
+          {{ error }}
+        </div>
       </v-card-text>
     </v-card>
 
@@ -59,7 +73,7 @@ const totalValue = computed(() => {
       <tbody>
         <tr v-for="(amount, asset) in nonZeroBalances" :key="asset">
           <td>{{ asset }}</td>
-          <td>{{ amount }}</td>
+          <td>{{ amount.toFixed(6) }}</td>
         </tr>
       </tbody>
     </v-table>
@@ -83,9 +97,20 @@ const totalValue = computed(() => {
           <td :style="{ color: t.type === 'BUY' ? 'green' : 'red' }">
             {{ t.type }}
           </td>
-          <td>{{ t.symbol }}</td>
-          <td>${{ t.price }}</td>
-          <td>{{ t.amount }}</td>
+          <td>
+            <img
+              v-if="getMarketBySymbol(t.symbol)?.id"
+              :src="`https://static.coinpaprika.com/coin/${getMarketBySymbol(t.symbol)!.id}/logo.png`"
+              @error="(e: any) => e.target.style.display = 'none'"
+              width="20"
+              height="20"
+              alt=""
+              style="vertical-align: middle; margin-right: 6px"
+            />
+            {{ t.symbol }}
+          </td>
+          <td>${{ t.price.toFixed(2) }}</td>
+          <td>{{ t.amount.toFixed(6) }}</td>
           <td>${{ t.total.toFixed(2) }}</td>
           <td>{{ new Date(t.createdAt).toLocaleString() }}</td>
         </tr>

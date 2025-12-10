@@ -1,6 +1,4 @@
 import { defineStore } from 'pinia';
-import type { Market } from '../mock/markets';
-import { markets } from '../mock/markets';
 
 export type TradeType = 'BUY' | 'SELL';
 
@@ -21,10 +19,6 @@ export interface TradingState {
 
 function createInitialBalances(): Record<string, number> {
   const balances: Record<string, number> = {};
-
-  markets.forEach((m: Market) => {
-    balances[m.symbol] = 0;
-  });
 
   balances['USDT'] = 10_000;
 
@@ -52,7 +46,7 @@ export const useTradingStore = defineStore('trading', {
 
       const total = price * amount;
 
-      if (!this.balances[symbol]) {
+      if (this.balances[symbol] === undefined) {
         this.balances[symbol] = 0;
       }
 

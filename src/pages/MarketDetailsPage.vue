@@ -1,16 +1,24 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, ref, watch, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
-import { markets } from '../mock/markets';
 import { useTradingStore } from '../stores/trading';
+import { useApi } from '../composables/useApi';
 import PriceChart from '../components/PriceChart.vue';
 
 const route = useRoute();
 const tradingStore = useTradingStore();
 
-const symbol = computed(() => String(route.params.symbol));
+const { markets, loading, error, loadMarkets } = useApi();
 
-const market = computed(() => markets.find((m) => m.symbol === symbol.value));
+const symbol = computed(() => String(route.params.symbol).toUpperCase());
+
+onMounted(() => {
+  loadMarkets();
+});
+
+const market = computed(() =>
+  markets.value.find((m) => m.symbol === symbol.value)
+);
 
 const type = ref<'BUY' | 'SELL'>('BUY');
 const price = ref(market.value?.price ?? 0);
@@ -72,6 +80,14 @@ const submitOrder = () => {
   }
 };
 
+watch(
+  market,
+  (m) => {
+    if (m) price.value = m.price;
+  },
+  { immediate: true }
+);
+
 watch(type, () => {
   errorMessage.value = null;
   amount.value = 0;
@@ -81,6 +97,16 @@ watch(type, () => {
 <template>
   <div>
     <h1 class="mb-4">
+      <img
+        v-if="market?.id"
+        :src="`https://static.coinpaprika.com/coin/${market.id}/logo.png`"
+        @error="(e: any) => e.target.style.display = 'none'"
+        width="30"
+        height="30"
+        alt=""
+        class="mb-1"
+        style="vertical-align: middle; margin-right: 6px"
+      />
       {{ market ? market.name : 'Unknown market' }}
       <span v-if="market">({{ market.symbol }})</span>
     </h1>
@@ -89,9 +115,18 @@ watch(type, () => {
       <v-icon>mdi-arrow-left</v-icon>
     </v-btn>
 
+    <div v-if="loading" class="my-4">
+      <v-progress-circular indeterminate />
+    </div>
+
+    <p v-if="error" style="color: red">
+      {{ error }}
+    </p>
+
     <div v-if="market">
       <p class="mb-4">
-        Current price: <strong>${{ market.price.toLocaleString() }}</strong>
+        Current price:
+        <strong>${{ Number(market.price.toFixed(2)).toLocaleString() }}</strong>
       </p>
 
       <v-card class="mb-4" elevation="2">
@@ -155,10 +190,14 @@ watch(type, () => {
 
           <p class="mt-2">
             Your {{ symbol }} balance:
-            <strong>{{ tradingStore.balances[symbol] ?? 0 }}</strong>
+            <strong>{{
+              (tradingStore.balances[symbol] ?? 0).toFixed(6)
+            }}</strong>
             <br />
             Your USDT balance:
-            <strong>{{ tradingStore.balances['USDT'] ?? 0 }}</strong>
+            <strong>{{
+              (tradingStore.balances['USDT'] ?? 0).toFixed(2)
+            }}</strong>
           </p>
 
           <p v-if="errorMessage" class="mt-2" style="color: red">
@@ -177,7 +216,7 @@ watch(type, () => {
       </v-card>
     </div>
 
-    <div v-else>
+    <div v-else-if="!loading && !error">
       <p>Market not found.</p>
     </div>
   </div>
