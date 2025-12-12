@@ -22,7 +22,9 @@ if (saved === 'light' || saved === 'dark') {
 <template>
   <v-app-bar app elevation="1">
     <v-app-bar-title class="font-weight-bold">
-      <span class="text-primary">Crypto</span> Dashboard
+      <RouterLink to="/markets" class="opacity-100">
+        <span class="text-primary cursor-pointer">Crypto</span> Dashboard
+      </RouterLink>
     </v-app-bar-title>
 
     <v-spacer class="d-none d-md-flex" />

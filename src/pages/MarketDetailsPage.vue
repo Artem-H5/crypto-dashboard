@@ -220,71 +220,98 @@ watch(symbol, () => {
         <v-card-title>Place order</v-card-title>
 
         <v-card-text>
-          <div class="d-none d-sm-flex align-center mb-4" style="gap: 8px">
-            <v-btn
-              :color="type === 'BUY' ? 'success' : undefined"
-              variant="elevated"
-              @click="type = 'BUY'"
-            >
-              BUY
-            </v-btn>
+          <v-row align="center">
+            <!--1 col -->
+            <v-col cols="12" sm="4" md="3">
+              <div class="d-none d-sm-flex align-center mb-4" style="gap: 8px">
+                <v-btn
+                  :color="type === 'BUY' ? 'success' : undefined"
+                  variant="elevated"
+                  @click="type = 'BUY'"
+                >
+                  BUY
+                </v-btn>
 
-            <v-btn
-              :color="type === 'SELL' ? 'error' : undefined"
-              variant="elevated"
-              @click="type = 'SELL'"
-            >
-              SELL
-            </v-btn>
-          </div>
-
-          <v-row class="d-flex d-sm-none ga-1" justify="center">
-            <v-col col="12">
-              <v-btn
-                block
-                size="large"
-                :color="type === 'BUY' ? 'success' : undefined"
-                variant="elevated"
-                @click="type = 'BUY'"
-              >
-                BUY
-              </v-btn>
-            </v-col>
-            <v-col col="12">
-              <v-btn
-                block
-                size="large"
-                :color="type === 'SELL' ? 'error' : undefined"
-                variant="elevated"
-                @click="type = 'SELL'"
-              >
-                SELL
-              </v-btn>
-            </v-col>
-          </v-row>
-
-          <v-row>
-            <v-col cols="12" md="4">
-              <div class="text-caption text-medium-emphasis mb-1">
-                Current price
+                <v-btn
+                  :color="type === 'SELL' ? 'error' : undefined"
+                  variant="elevated"
+                  @click="type = 'SELL'"
+                >
+                  SELL
+                </v-btn>
               </div>
-              <div class="text-h5 font-weight-bold">
-                ${{ market?.price.toLocaleString() }}
-              </div>
-            </v-col>
 
-            <v-col cols="12" md="4">
-              <v-text-field
-                v-model.number="amount"
-                type="number"
-                label="Amount"
-              >
-                <template #append-inner>
-                  <v-btn variant="text" size="x-small" @click="setMax">
-                    All
+              <v-row class="d-flex d-sm-none ga-1" justify="center">
+                <v-col col="12">
+                  <v-btn
+                    block
+                    size="large"
+                    :color="type === 'BUY' ? 'success' : undefined"
+                    variant="elevated"
+                    @click="type = 'BUY'"
+                  >
+                    BUY
                   </v-btn>
-                </template>
-              </v-text-field>
+                </v-col>
+                <v-col col="12">
+                  <v-btn
+                    block
+                    size="large"
+                    :color="type === 'SELL' ? 'error' : undefined"
+                    variant="elevated"
+                    @click="type = 'SELL'"
+                  >
+                    SELL
+                  </v-btn>
+                </v-col>
+              </v-row>
+            </v-col>
+
+            <!--2 col -->
+            <v-col cols="12" sm="8" md="9">
+              <v-row>
+                <v-col cols="12" sm="6" md="3">
+                  <div class="text-caption text-medium-emphasis mb-1">
+                    Current price
+                  </div>
+                  <div class="text-h5 font-weight-bold">
+                    ${{ market?.price.toLocaleString() }}
+                  </div>
+                </v-col>
+
+                <v-col cols="12" sm="6" md="4" class="d-none d-sm-block">
+                  <v-text-field
+                    v-model.number="amount"
+                    type="number"
+                    label="Amount"
+                  >
+                    <template #append-inner>
+                      <v-btn variant="text" size="x-small" @click="setMax">
+                        All
+                      </v-btn>
+                    </template>
+                  </v-text-field>
+                </v-col>
+                <v-col cols="12" class="d-sm-none">
+                  <div class="amount-wrapper">
+                    <v-text-field
+                      v-model.number="amount"
+                      type="number"
+                      label="Amount"
+                      hide-details
+                    />
+
+                    <v-btn
+                      class="amount-all-btn"
+                      variant="tonal"
+                      size="small"
+                      @click="setMax"
+                    >
+                      ALL
+                    </v-btn>
+                  </div>
+                </v-col>
+              </v-row>
             </v-col>
           </v-row>
 
@@ -337,3 +364,20 @@ watch(symbol, () => {
     </div>
   </div>
 </template>
+
+<style scoped>
+.amount-wrapper {
+  position: relative;
+}
+
+.amount-all-btn {
+  position: absolute;
+  right: 8px;
+  top: 6px;
+  bottom: 6px;
+  transform: none;
+  height: auto;
+  min-width: 44px;
+  font-size: 12px;
+}
+</style>
