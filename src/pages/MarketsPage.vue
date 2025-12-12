@@ -4,7 +4,7 @@ import { onMounted, onUnmounted, ref } from 'vue';
 import { useMarkets } from '../composables/useMarkets';
 
 const router = useRouter();
-const { markets, error, loadMarkets } = useMarkets();
+const { markets, error, loadMarkets, page, hasMore } = useMarkets();
 
 const initialLoading = ref(true);
 
@@ -14,11 +14,17 @@ function goToMarket(symbol: string) {
 
 let intervalId: number | undefined;
 
+const loadMore = async () => {
+  page.value++;
+  const newMarkets = await loadMarkets();
+  markets.value = [...markets.value, ...newMarkets];
+};
+
 onMounted(async () => {
   await loadMarkets();
   initialLoading.value = false;
 
-  intervalId = window.setInterval(loadMarkets, 5000);
+  intervalId = window.setInterval(loadMarkets, 30000);
 });
 
 onUnmounted(() => {
@@ -62,7 +68,7 @@ onUnmounted(() => {
           <td>{{ m.rank }}</td>
           <td>
             <img
-              :src="`https://static.coinpaprika.com/coin/${m.id}/logo.png`"
+              :src="m.image"
               width="20"
               height="20"
               alt=""
@@ -76,11 +82,15 @@ onUnmounted(() => {
             ${{ m.marketCap.toLocaleString() }}
           </td>
           <td :style="{ color: m.change24h >= 0 ? 'green' : 'red' }">
-            {{ m.change24h }}%
+            {{ m.change24h.toFixed(2) }}%
           </td>
         </tr>
       </tbody>
     </v-table>
+    <div class="d-flex justify-center mt-4">
+      <v-btn v-if="hasMore" @click="loadMore">Load more</v-btn>
+      <p v-else>No more markets to load.</p>
+    </div>
   </div>
 </template>
 

@@ -165,8 +165,8 @@ watch(symbol, () => {
             </v-btn>
             <h1 class="mb-1">
               <img
-                v-if="market?.id"
-                :src="`https://static.coinpaprika.com/coin/${market.id}/logo.png`"
+                v-if="market?.image"
+                :src="market.image"
                 @error="(e: any) => (e.target as HTMLImageElement).style.display = 'none'"
                 width="30"
                 height="30"
@@ -181,7 +181,7 @@ watch(symbol, () => {
           <p class="mb-0">
             Current price:
             <strong
-              >${{ Number(currentPrice.toFixed(2)).toLocaleString() }}</strong
+              >${{ Number(market?.price.toFixed(2)).toLocaleString() }}</strong
             >
           </p>
         </div>
@@ -199,7 +199,7 @@ watch(symbol, () => {
 
     <div v-if="market">
       <v-card class="mb-4" elevation="2">
-        <v-card-title>Price (last 30 days)</v-card-title>
+        <v-card-title>30d chart</v-card-title>
         <v-card-text>
           <div v-if="chartLoading" class="my-2">
             <v-progress-circular indeterminate />
@@ -265,11 +265,12 @@ watch(symbol, () => {
 
           <v-row>
             <v-col cols="12" md="4">
-              <v-text-field
-                v-model.number="price"
-                type="number"
-                label="Price"
-              />
+              <div class="text-caption text-medium-emphasis mb-1">
+                Current price
+              </div>
+              <div class="text-h5 font-weight-bold">
+                ${{ market?.price.toLocaleString() }}
+              </div>
             </v-col>
 
             <v-col cols="12" md="4">
