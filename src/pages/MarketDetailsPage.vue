@@ -5,6 +5,7 @@ import { useTradingStore } from '../stores/trading';
 import { useMarkets } from '../composables/useMarkets';
 import { useMarketChart } from '../composables/useMarketChart';
 import PriceChart from '../components/PriceChart.vue';
+import MarketMetrics from '../components/MarketMetrics.vue';
 
 const route = useRoute();
 const tradingStore = useTradingStore();
@@ -148,7 +149,7 @@ watch(symbol, () => {
 <template>
   <div>
     <v-row class="mb-4" align="start">
-      <v-col>
+      <v-col cols="12" lg="4">
         <div class="d-flex flex-column ga-2">
           <div class="d-flex align-center ga-1">
             <v-btn variant="text" icon @click="$router.push('/markets')">
@@ -177,6 +178,7 @@ watch(symbol, () => {
           </p>
         </div>
       </v-col>
+      <MarketMetrics :symbol="symbol" />
     </v-row>
 
     <div v-if="loading" class="my-4">
