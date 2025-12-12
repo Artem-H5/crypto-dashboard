@@ -1,6 +1,7 @@
 export interface MarketChart {
   prices: number[];
   labels: string[];
+  timestamps: number[];
 }
 
 export const useMarketChart = () => {
@@ -67,6 +68,7 @@ export const useMarketChart = () => {
         if (req.kind === 'hourly') {
           const prices: number[] = [];
           const labels: string[] = [];
+          const timestamps: number[] = [];
           parsed.forEach(([ts, p], idx) => {
             if (idx % 4 !== 0) return;
             prices.push(Number(p.toFixed(4)));
@@ -77,17 +79,19 @@ export const useMarketChart = () => {
                 timeZone: 'UTC',
               })
             );
+            timestamps.push(ts);
           });
 
           if (!prices.length) {
             throw new Error('No price points returned for this period.');
           }
 
-          return { prices, labels };
+          return { prices, labels, timestamps };
         }
 
         const prices: number[] = [];
         const labels: string[] = [];
+        const timestamps: number[] = [];
 
         for (const [ts, p] of parsed) {
           const label = new Date(ts).toLocaleDateString('en-US', {
@@ -98,13 +102,15 @@ export const useMarketChart = () => {
 
           if (labels[labels.length - 1] === label) {
             prices[prices.length - 1] = Number(p.toFixed(4));
+            timestamps[timestamps.length - 1] = ts;
           } else {
             labels.push(label);
             prices.push(Number(p.toFixed(4)));
+            timestamps.push(ts);
           }
         }
 
-        return { prices, labels };
+        return { prices, labels, timestamps };
       } catch (e) {
         lastError = e;
         continue;

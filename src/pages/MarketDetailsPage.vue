@@ -22,6 +22,7 @@ const market = computed(() =>
 
 const chartPrices = ref<number[]>([]);
 const chartLabels = ref<string[]>([]);
+const chartTimestamps = ref<number[]>([]);
 const chartLoading = ref(false);
 const chartError = ref<string | null>(null);
 
@@ -121,15 +122,17 @@ const loadChartData = async () => {
   chartError.value = null;
 
   try {
-    const { prices, labels } = await loadMarketChart(symbol.value);
+    const { prices, labels, timestamps } = await loadMarketChart(symbol.value);
     chartPrices.value = prices;
     chartLabels.value = labels;
+    chartTimestamps.value = timestamps;
   } catch (e: any) {
     console.error(e);
     chartError.value =
       e?.message ?? 'Failed to load chart data. Please try again.';
     chartPrices.value = [];
     chartLabels.value = [];
+    chartTimestamps.value = [];
   } finally {
     chartLoading.value = false;
   }
@@ -203,6 +206,7 @@ watch(symbol, () => {
             v-else
             :prices="displayedPrices"
             :labels="historyLabels"
+            :timestamps="chartTimestamps"
           />
         </v-card-text>
       </v-card>

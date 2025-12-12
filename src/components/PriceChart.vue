@@ -25,6 +25,7 @@ ChartJS.register(
 const props = defineProps<{
   prices: number[];
   labels: string[];
+  timestamps?: number[];
 }>();
 
 const chartData = computed(() => ({
@@ -53,6 +54,37 @@ const chartOptions = {
     tooltip: {
       mode: 'index' as const,
       intersect: false,
+      callbacks: {
+        label(context: any) {
+          const value = context.parsed.y;
+          return ` $${value}`;
+        },
+        title(context: any) {
+          const idx = context?.[0]?.dataIndex ?? null;
+          const ts =
+            typeof idx === 'number' && props.timestamps
+              ? props.timestamps[idx]
+              : null;
+
+          if (typeof ts === 'number') {
+            const date = new Date(ts);
+            const dateStr = date.toLocaleDateString('en-US', {
+              month: 'short',
+              day: 'numeric',
+              timeZone: 'UTC',
+            });
+            const timeStr = date.toLocaleTimeString('en-US', {
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: false,
+              timeZone: 'UTC',
+            });
+            return `${dateStr}, ${timeStr}`;
+          }
+
+          return context[0]?.label ?? '';
+        },
+      },
     },
     title: {
       display: false,
@@ -60,20 +92,12 @@ const chartOptions = {
   },
   scales: {
     x: {
-      title: {
-        display: true,
-        text: 'Time',
-      },
       ticks: {
         maxTicksLimit: 10,
         autoSkip: true,
       },
     },
     y: {
-      title: {
-        display: true,
-        text: 'Price (USD)',
-      },
       ticks: {
         callback(value: any) {
           return '$' + value;
