@@ -155,7 +155,12 @@ watch(symbol, () => {
       <v-col cols="12" lg="4">
         <div class="d-flex flex-column ga-2">
           <div class="d-flex align-center ga-1">
-            <v-btn variant="text" icon @click="$router.push('/markets')">
+            <v-btn
+              class="ml-n4"
+              variant="text"
+              icon
+              @click="$router.push('/markets')"
+            >
               <v-icon>mdi-arrow-left</v-icon>
             </v-btn>
             <h1 class="mb-1">
@@ -215,7 +220,7 @@ watch(symbol, () => {
         <v-card-title>Place order</v-card-title>
 
         <v-card-text>
-          <div class="d-flex align-center mb-4" style="gap: 8px">
+          <div class="d-none d-sm-flex align-center mb-4" style="gap: 8px">
             <v-btn
               :color="type === 'BUY' ? 'success' : undefined"
               variant="elevated"
@@ -232,6 +237,31 @@ watch(symbol, () => {
               SELL
             </v-btn>
           </div>
+
+          <v-row class="d-flex d-sm-none ga-1" justify="center">
+            <v-col col="12">
+              <v-btn
+                block
+                size="large"
+                :color="type === 'BUY' ? 'success' : undefined"
+                variant="elevated"
+                @click="type = 'BUY'"
+              >
+                BUY
+              </v-btn>
+            </v-col>
+            <v-col col="12">
+              <v-btn
+                block
+                size="large"
+                :color="type === 'SELL' ? 'error' : undefined"
+                variant="elevated"
+                @click="type = 'SELL'"
+              >
+                SELL
+              </v-btn>
+            </v-col>
+          </v-row>
 
           <v-row>
             <v-col cols="12" md="4">
@@ -279,6 +309,18 @@ watch(symbol, () => {
         </v-card-text>
 
         <v-card-actions>
+          <!-- Desktop CTA -->
+          <v-btn
+            class="d-flex d-sm-none mt-4"
+            variant="tonal"
+            block
+            size="large"
+            :color="type === 'BUY' ? 'success' : 'error'"
+            @click="submitOrder"
+          >
+            {{ type === 'BUY' ? 'Buy' : 'Sell' }} {{ symbol }}
+          </v-btn>
+          <!-- Mobile CTA -->
           <v-btn
             :color="type === 'BUY' ? 'success' : 'error'"
             @click="submitOrder"

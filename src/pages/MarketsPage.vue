@@ -45,9 +45,9 @@ onUnmounted(() => {
         <tr>
           <th>Rank</th>
           <th>Symbol</th>
-          <th>Name</th>
+          <th class="d-none d-sm-table-cell">Name</th>
           <th>Price</th>
-          <th>Market cap</th>
+          <th class="d-none d-sm-table-cell">Market cap</th>
           <th>24h</th>
         </tr>
       </thead>
@@ -70,9 +70,11 @@ onUnmounted(() => {
             />
             {{ m.symbol }}
           </td>
-          <td>{{ m.name }}</td>
+          <td class="d-none d-sm-table-cell">{{ m.name }}</td>
           <td>${{ m.price.toLocaleString() }}</td>
-          <td>${{ m.marketCap.toLocaleString() }}</td>
+          <td class="d-none d-sm-table-cell">
+            ${{ m.marketCap.toLocaleString() }}
+          </td>
           <td :style="{ color: m.change24h >= 0 ? 'green' : 'red' }">
             {{ m.change24h }}%
           </td>
