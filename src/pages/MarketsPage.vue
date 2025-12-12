@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router';
 import { onMounted, onUnmounted, ref } from 'vue';
-import { useApi } from '../composables/useApi';
+import { useMarkets } from '../composables/useMarkets';
 
 const router = useRouter();
-const { markets, error, loadMarkets } = useApi();
+const { markets, error, loadMarkets } = useMarkets();
 
 const initialLoading = ref(true);
 

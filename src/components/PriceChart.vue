@@ -35,7 +35,8 @@ const chartData = computed(() => ({
       data: props.prices,
       borderColor: '#42a5f5',
       borderWidth: 2,
-      pointRadius: 2,
+      pointRadius: 0,
+      pointHoverRadius: 4,
       tension: 0.25,
       fill: false,
     },
@@ -63,6 +64,10 @@ const chartOptions = {
         display: true,
         text: 'Time',
       },
+      ticks: {
+        maxTicksLimit: 10,
+        autoSkip: true,
+      },
     },
     y: {
       title: {
@@ -80,7 +85,7 @@ const chartOptions = {
 </script>
 
 <template>
-  <div style="height: 260px">
+  <div :style="{ height: $vuetify.display.smAndUp ? '360px' : '240px' }">
     <Line :data="chartData" :options="chartOptions" />
   </div>
 </template>

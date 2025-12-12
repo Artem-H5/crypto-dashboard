@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue';
 import { useTradingStore } from '../stores/trading';
-import { useApi } from '../composables/useApi';
+import { useMarkets } from '../composables/useMarkets';
 
 const tradingStore = useTradingStore();
 
-const { markets, loading, error, loadMarkets } = useApi();
+const { markets, loading, error, loadMarkets } = useMarkets();
 
 onMounted(() => {
   loadMarkets();

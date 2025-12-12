@@ -2,28 +2,40 @@
 import { computed, ref, watch, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useTradingStore } from '../stores/trading';
-import { useApi } from '../composables/useApi';
+import { useMarkets } from '../composables/useMarkets';
+import { useMarketChart } from '../composables/useMarketChart';
 import PriceChart from '../components/PriceChart.vue';
 
 const route = useRoute();
 const tradingStore = useTradingStore();
 
-const { markets, loading, error, loadMarkets } = useApi();
+const { markets, loading, error, loadMarkets } = useMarkets();
+
+const { loadMarketChart } = useMarketChart();
 
 const symbol = computed(() => String(route.params.symbol).toUpperCase());
-
-onMounted(() => {
-  loadMarkets();
-});
 
 const market = computed(() =>
   markets.value.find((m) => m.symbol === symbol.value)
 );
 
+const chartPrices = ref<number[]>([]);
+const chartLabels = ref<string[]>([]);
+const chartLoading = ref(false);
+const chartError = ref<string | null>(null);
+
 const type = ref<'BUY' | 'SELL'>('BUY');
 const price = ref(market.value?.price ?? 0);
 const amount = ref(0);
 const errorMessage = ref<string | null>(null);
+
+const currentPrice = computed<number>(() => {
+  const lastPrice = chartPrices.value[chartPrices.value.length - 1];
+  if (typeof lastPrice === 'number') {
+    return lastPrice;
+  }
+  return market.value?.price ?? 0;
+});
 
 const total = computed(() => {
   return price.value * amount.value;
@@ -44,7 +56,15 @@ const maxAmount = computed(() => {
   return 0;
 });
 
+const displayedPrices = computed(() => {
+  if (chartPrices.value.length) {
+    return chartPrices.value;
+  }
+  return market.value?.history ?? [];
+});
+
 const historyLabels = computed(() => {
+  if (chartLabels.value.length) return chartLabels.value;
   if (!market.value) return [];
 
   const len = market.value.history.length;
@@ -81,9 +101,9 @@ const submitOrder = () => {
 };
 
 watch(
-  market,
-  (m) => {
-    if (m) price.value = m.price;
+  currentPrice,
+  (p) => {
+    price.value = p;
   },
   { immediate: true }
 );
@@ -92,28 +112,72 @@ watch(type, () => {
   errorMessage.value = null;
   amount.value = 0;
 });
+
+const loadChartData = async () => {
+  if (!symbol.value) return;
+
+  chartLoading.value = true;
+  chartError.value = null;
+
+  try {
+    const { prices, labels } = await loadMarketChart(symbol.value);
+    chartPrices.value = prices;
+    chartLabels.value = labels;
+  } catch (e: any) {
+    console.error(e);
+    chartError.value =
+      e?.message ?? 'Failed to load chart data. Please try again.';
+    chartPrices.value = [];
+    chartLabels.value = [];
+  } finally {
+    chartLoading.value = false;
+  }
+};
+
+onMounted(() => {
+  loadMarkets();
+  loadChartData();
+});
+
+watch(symbol, () => {
+  loadChartData();
+  errorMessage.value = null;
+});
 </script>
 
 <template>
   <div>
-    <h1 class="mb-4">
-      <img
-        v-if="market?.id"
-        :src="`https://static.coinpaprika.com/coin/${market.id}/logo.png`"
-        @error="(e: any) => e.target.style.display = 'none'"
-        width="30"
-        height="30"
-        alt=""
-        class="mb-1"
-        style="vertical-align: middle; margin-right: 6px"
-      />
-      {{ market ? market.name : 'Unknown market' }}
-      <span v-if="market">({{ market.symbol }})</span>
-    </h1>
-
-    <v-btn variant="text" icon @click="$router.push('/markets')" class="mb-4">
-      <v-icon>mdi-arrow-left</v-icon>
-    </v-btn>
+    <v-row class="mb-4" align="start">
+      <v-col>
+        <div class="d-flex flex-column ga-2">
+          <div class="d-flex align-center ga-1">
+            <v-btn variant="text" icon @click="$router.push('/markets')">
+              <v-icon>mdi-arrow-left</v-icon>
+            </v-btn>
+            <h1 class="mb-1">
+              <img
+                v-if="market?.id"
+                :src="`https://static.coinpaprika.com/coin/${market.id}/logo.png`"
+                @error="(e: any) => (e.target as HTMLImageElement).style.display = 'none'"
+                width="30"
+                height="30"
+                alt=""
+                class="mb-1"
+                style="vertical-align: middle; margin-right: 6px"
+              />
+              {{ market ? market.name : 'Unknown market' }}
+              <span v-if="market">({{ market.symbol }})</span>
+            </h1>
+          </div>
+          <p class="mb-0">
+            Current price:
+            <strong
+              >${{ Number(currentPrice.toFixed(2)).toLocaleString() }}</strong
+            >
+          </p>
+        </div>
+      </v-col>
+    </v-row>
 
     <div v-if="loading" class="my-4">
       <v-progress-circular indeterminate />
@@ -124,17 +188,20 @@ watch(type, () => {
     </p>
 
     <div v-if="market">
-      <p class="mb-4">
-        Current price:
-        <strong>${{ Number(market.price.toFixed(2)).toLocaleString() }}</strong>
-      </p>
-
       <v-card class="mb-4" elevation="2">
-        <v-card-title
-          >Price (last {{ market.history.length }} points)</v-card-title
-        >
+        <v-card-title>Price (last 30 days)</v-card-title>
         <v-card-text>
-          <PriceChart :prices="market.history" :labels="historyLabels" />
+          <div v-if="chartLoading" class="my-2">
+            <v-progress-circular indeterminate />
+          </div>
+          <p v-else-if="chartError" style="color: red">
+            {{ chartError }}
+          </p>
+          <PriceChart
+            v-else
+            :prices="displayedPrices"
+            :labels="historyLabels"
+          />
         </v-card-text>
       </v-card>
 

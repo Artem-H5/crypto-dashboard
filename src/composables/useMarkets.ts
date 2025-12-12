@@ -19,8 +19,8 @@ function generateHistoryFromPrice(price: number): number[] {
   return history;
 }
 
-export function useApi() {
-  async function loadMarkets() {
+export const useMarkets = () => {
+  const loadMarkets = async () => {
     loading.value = true;
     error.value = null;
 
@@ -66,7 +66,7 @@ export function useApi() {
     } finally {
       loading.value = false;
     }
-  }
+  };
 
   return {
     markets,
@@ -74,4 +74,4 @@ export function useApi() {
     error,
     loadMarkets,
   };
-}
+};
