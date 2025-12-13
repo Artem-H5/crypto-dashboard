@@ -2,6 +2,7 @@ import { ref } from 'vue';
 import type { Market } from '../types/market';
 
 const markets = ref<Market[]>([]);
+const allMarkets = ref<Market[]>([]);
 const page = ref(1);
 const perPage = 20;
 const hasMore = ref(true);
@@ -29,7 +30,7 @@ export const useMarkets = () => {
 
     try {
       const res = await fetch(
-        `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=${perPage}&page=${page.value}&sparkline=false&price_change_percentage=24h`
+        `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=220&page=1&sparkline=false&price_change_percentage=24h`
       );
 
       if (!res.ok) {
@@ -37,10 +38,6 @@ export const useMarkets = () => {
       }
 
       const data = await res.json();
-
-      if (data.length < perPage) {
-        hasMore.value = false;
-      }
 
       const mapped = (data as any[]).map((item: any) => {
         const price = Number(item.current_price ?? 0);
@@ -60,25 +57,40 @@ export const useMarkets = () => {
         } satisfies Market;
       });
 
-      markets.value = mapped;
-      return mapped;
+      allMarkets.value = mapped;
+      page.value = 1;
+      markets.value = allMarkets.value.slice(0, perPage);
+      hasMore.value = markets.value.length < allMarkets.value.length;
+
+      return markets.value;
     } catch (e: any) {
       console.error(e);
       error.value = e?.message ?? 'Unknown error';
       markets.value = [];
+      allMarkets.value = [];
+      hasMore.value = false;
       return [];
     } finally {
       loading.value = false;
     }
   };
 
+  const loadMoreLocal = () => {
+    const nextPage = page.value + 1;
+    const end = nextPage * perPage;
+    markets.value = allMarkets.value.slice(0, end);
+    page.value = nextPage;
+    hasMore.value = markets.value.length < allMarkets.value.length;
+  };
+
   return {
     markets,
+    allMarkets,
     loading,
     error,
     loadMarkets,
+    loadMoreLocal,
     page,
     hasMore,
-    perPage,
   };
 };

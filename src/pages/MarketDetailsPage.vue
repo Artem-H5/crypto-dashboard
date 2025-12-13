@@ -10,15 +10,20 @@ import MarketMetrics from '../components/MarketMetrics.vue';
 const route = useRoute();
 const tradingStore = useTradingStore();
 
-const { markets, loading, error, loadMarkets } = useMarkets();
+const { allMarkets, loading, error, loadMarkets } = useMarkets();
 
 const { loadMarketChart } = useMarketChart();
 
 const symbol = computed(() => String(route.params.symbol).toUpperCase());
 
 const market = computed(() =>
-  markets.value.find((m) => m.symbol === symbol.value)
+  allMarkets.value.find((m) => m.symbol === symbol.value)
 );
+
+const marketsErrorText = computed(() => {
+  if (!error.value) return null;
+  return `Failed to load markets. Please try again. (${error.value})`;
+});
 
 const chartPrices = ref<number[]>([]);
 const chartLabels = ref<string[]>([]);
@@ -128,8 +133,7 @@ const loadChartData = async () => {
     chartTimestamps.value = timestamps;
   } catch (e: any) {
     console.error(e);
-    chartError.value =
-      e?.message ?? 'Failed to load chart data. Please try again.';
+    chartError.value = 'Unable to load chart data. Please try again.';
     chartPrices.value = [];
     chartLabels.value = [];
     chartTimestamps.value = [];
@@ -192,12 +196,20 @@ watch(symbol, () => {
     <div v-if="loading" class="my-4">
       <v-progress-circular indeterminate />
     </div>
+    <v-alert
+      v-else-if="marketsErrorText"
+      type="error"
+      variant="tonal"
+      class="my-2"
+      density="compact"
+    >
+      {{ marketsErrorText }}
+    </v-alert>
+    <div v-else-if="!market" class="my-4 text-body-2">
+      Could not find this market. Please return to Markets and try again.
+    </div>
 
-    <p v-if="error" style="color: red">
-      {{ error }}
-    </p>
-
-    <div v-if="market">
+    <div v-else>
       <v-card class="mb-4" elevation="2">
         <v-card-title>30d chart</v-card-title>
         <v-card-text>
@@ -357,10 +369,6 @@ watch(symbol, () => {
           </v-btn>
         </v-card-actions>
       </v-card>
-    </div>
-
-    <div v-else-if="!loading && !error">
-      <p>Market not found.</p>
     </div>
   </div>
 </template>
