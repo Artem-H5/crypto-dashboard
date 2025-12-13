@@ -17,6 +17,30 @@ export interface TradingState {
   trades: Trade[];
 }
 
+type PersistedPortfolio = {
+  balances: Record<string, number>;
+  trades: Trade[];
+};
+
+const LS_KEY = 'portfolio';
+
+const loadPortfolio = (): PersistedPortfolio => {
+  if (typeof window === 'undefined') {
+    return { balances: {}, trades: [] };
+  }
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    return raw ? JSON.parse(raw) : { balances: {}, trades: [] };
+  } catch {
+    return { balances: {}, trades: [] };
+  }
+};
+
+const savePortfolio = (data: PersistedPortfolio) => {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(LS_KEY, JSON.stringify(data));
+};
+
 function createInitialBalances(): Record<string, number> {
   const balances: Record<string, number> = {};
 
@@ -26,10 +50,15 @@ function createInitialBalances(): Record<string, number> {
 }
 
 export const useTradingStore = defineStore('trading', {
-  state: (): TradingState => ({
-    balances: createInitialBalances(),
-    trades: [],
-  }),
+  state: (): TradingState => {
+    const { balances, trades } = loadPortfolio();
+    return {
+      balances: Object.keys(balances).length
+        ? balances
+        : createInitialBalances(),
+      trades,
+    };
+  },
 
   actions: {
     placeOrder(payload: {
@@ -78,6 +107,8 @@ export const useTradingStore = defineStore('trading', {
       };
 
       this.trades.push(trade);
+
+      savePortfolio({ balances: this.balances, trades: this.trades });
 
       return null;
     },
