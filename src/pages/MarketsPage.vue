@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router';
-import { onMounted, onUnmounted, ref, computed } from 'vue';
+import { onMounted, onUnmounted, ref, computed, watch } from 'vue';
 import { useMarkets } from '../composables/useMarkets';
 
 const router = useRouter();
@@ -8,6 +8,7 @@ const { markets, error, loadMarkets, loadMoreLocal, hasMore } = useMarkets();
 
 const initialLoading = ref(true);
 const loadingMore = ref(false);
+const priceFlash = ref<Record<string, 'up' | 'down'>>({});
 
 const marketsErrorText = computed(() => {
   if (!error.value) return null;
@@ -33,11 +34,44 @@ const retryLoad = async () => {
   initialLoading.value = false;
 };
 
+const flashClass = (marketId: string) => {
+  const dir = priceFlash.value[marketId];
+  if (dir === 'up') return 'flash-up';
+  if (dir === 'down') return 'flash-down';
+  return '';
+};
+
+watch(
+  markets,
+  (next, prev) => {
+    const prevPrices = new Map((prev ?? []).map((m) => [m.id, m.price]));
+    const updates: Record<string, 'up' | 'down'> = { ...priceFlash.value };
+
+    next.forEach((m) => {
+      const prevPrice = prevPrices.get(m.id);
+      if (prevPrice === undefined || prevPrice === m.price) return;
+      const dir = m.price > prevPrice ? 'up' : 'down';
+      updates[m.id] = dir;
+
+      window.setTimeout(() => {
+        if (priceFlash.value[m.id] === dir) {
+          const copy = { ...priceFlash.value };
+          delete copy[m.id];
+          priceFlash.value = copy;
+        }
+      }, 600);
+    });
+
+    priceFlash.value = updates;
+  },
+  { deep: true }
+);
+
 onMounted(async () => {
   await loadMarkets();
   initialLoading.value = false;
 
-  intervalId = window.setInterval(loadMarkets, 30000);
+  intervalId = window.setInterval(loadMarkets, 15000);
 });
 
 onUnmounted(() => {
@@ -81,7 +115,7 @@ onUnmounted(() => {
           v-for="m in markets"
           :key="m.id"
           @click="goToMarket(m.symbol)"
-          class="market-row"
+          :class="['market-row', flashClass(m.id)]"
         >
           <td>{{ m.rank }}</td>
           <td>
@@ -121,7 +155,7 @@ onUnmounted(() => {
 <style scoped>
 .market-row {
   cursor: pointer;
-  transition: background-color 0.15s ease;
+  transition: background-color 0.25s ease;
 }
 
 .v-theme--light .market-row:hover {
@@ -129,5 +163,13 @@ onUnmounted(() => {
 }
 .v-theme--dark .market-row:hover {
   background-color: rgba(255, 255, 255, 0.04);
+}
+
+.flash-up {
+  background-color: rgba(46, 204, 113, 0.22);
+}
+
+.flash-down {
+  background-color: rgba(231, 76, 60, 0.22);
 }
 </style>

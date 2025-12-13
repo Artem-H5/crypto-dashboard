@@ -39,10 +39,20 @@ export const useMarkets = () => {
 
       const data = await res.json();
 
+      const prevPriceById = new Map(
+        allMarkets.value.map((m) => [m.id, m.price])
+      );
+
       const mapped = (data as any[]).map((item: any) => {
         const price = Number(item.current_price ?? 0);
         const change = Number(item.price_change_percentage_24h ?? 0);
         const marketCap = Number(item.market_cap ?? 0);
+        const prevPrice = prevPriceById.get(item.id);
+        let priceChange: 'up' | 'down' | 'same' = 'same';
+        if (prevPrice !== undefined) {
+          if (price > prevPrice) priceChange = 'up';
+          else if (price < prevPrice) priceChange = 'down';
+        }
 
         return {
           id: item.id as string,
@@ -54,12 +64,20 @@ export const useMarkets = () => {
           change24h: change,
           marketCap,
           history: generateHistoryFromPrice(price),
+          priceChange,
         } satisfies Market;
       });
 
+      const currentPage = Math.max(1, page.value);
+
       allMarkets.value = mapped;
-      page.value = 1;
-      markets.value = allMarkets.value.slice(0, perPage);
+
+      const maxPage = Math.max(1, Math.ceil(allMarkets.value.length / perPage));
+      const nextPage = Math.min(currentPage, maxPage);
+      page.value = nextPage;
+
+      const end = nextPage * perPage;
+      markets.value = allMarkets.value.slice(0, end);
       hasMore.value = markets.value.length < allMarkets.value.length;
 
       return markets.value;

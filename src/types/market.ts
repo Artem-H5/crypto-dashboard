@@ -8,4 +8,5 @@ export interface Market {
   change24h: number;
   marketCap: number;
   history: number[];
+  priceChange: 'up' | 'down' | 'same';
 }
