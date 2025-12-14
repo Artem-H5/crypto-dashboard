@@ -37,6 +37,24 @@ const chartError = ref<string | null>(null);
 const type = ref<'BUY' | 'SELL'>('BUY');
 const price = ref(market.value?.price ?? 0);
 const amount = ref(0);
+const amountPct = ref(0);
+
+let syncingFromPct = false;
+let syncingFromAmount = false;
+
+const blurActive = () => {
+  const el = document.activeElement;
+  if (el && el instanceof HTMLElement) el.blur();
+};
+
+const clamp = (n: number, min: number, max: number) => {
+  return Math.min(max, Math.max(min, n));
+};
+
+const floorTo = (n: number, decimals: number) => {
+  const p = 10 ** decimals;
+  return Math.floor(n * p) / p;
+};
 
 const currentPrice = computed<number>(() => {
   const lastPrice = chartPrices.value[chartPrices.value.length - 1];
@@ -66,6 +84,31 @@ const maxAmount = computed(() => {
 
   return 0;
 });
+
+watch(
+  () => amountPct.value,
+  (pct) => {
+    if (syncingFromAmount) return;
+    syncingFromPct = true;
+    const max = maxAmount.value;
+    const next = max > 0 ? (max * clamp(pct, 0, 100)) / 100 : 0;
+    amount.value = floorTo(next, 6);
+    syncingFromPct = false;
+  }
+);
+
+watch(
+  [() => amount.value, () => maxAmount.value],
+  () => {
+    if (syncingFromPct) return;
+    syncingFromAmount = true;
+    const max = maxAmount.value;
+    const pct = max > 0 ? (amount.value / max) * 100 : 0;
+    amountPct.value = Math.round(clamp(pct, 0, 100));
+    syncingFromAmount = false;
+  },
+  { immediate: true }
+);
 
 const displayedPrices = computed(() => {
   if (chartPrices.value.length) {
@@ -281,7 +324,7 @@ watch(symbol, () => {
             </v-col>
 
             <!--2 col -->
-            <v-col cols="12" sm="8" md="9">
+            <v-col cols="12" sm="8" md="9" class="pb-0">
               <v-row>
                 <v-col cols="12" sm="6" md="3">
                   <div class="text-caption text-medium-emphasis mb-1">
@@ -297,6 +340,9 @@ watch(symbol, () => {
                     v-model.number="amount"
                     type="number"
                     label="Amount"
+                    density="compact"
+                    hide-details
+                    class="mb-0"
                   >
                     <template #append-inner>
                       <v-btn variant="text" size="x-small" @click="setMax">
@@ -304,8 +350,24 @@ watch(symbol, () => {
                       </v-btn>
                     </template>
                   </v-text-field>
+                  <div class="mt-0">
+                    <v-slider
+                      class="amount-pct-slider"
+                      v-model="amountPct"
+                      :min="0"
+                      :max="100"
+                      :step="1"
+                      thumb-label
+                      @pointerup="blurActive"
+                      @pointercancel="blurActive"
+                    >
+                      <template #thumb-label="{ modelValue }">
+                        {{ modelValue }}%
+                      </template>
+                    </v-slider>
+                  </div>
                 </v-col>
-                <v-col cols="12" class="d-sm-none">
+                <v-col cols="12" class="d-sm-none pb-0">
                   <div class="amount-wrapper">
                     <v-text-field
                       v-model.number="amount"
@@ -313,6 +375,21 @@ watch(symbol, () => {
                       label="Amount"
                       hide-details
                     />
+
+                    <v-slider
+                      v-model="amountPct"
+                      :min="0"
+                      :max="100"
+                      :step="1"
+                      thumb-label
+                      @pointerup="blurActive"
+                      @pointercancel="blurActive"
+                      class="amount-pct-slider mt-2"
+                    >
+                      <template #thumb-label="{ modelValue }">
+                        {{ modelValue }}%
+                      </template>
+                    </v-slider>
 
                     <v-btn
                       class="amount-all-btn"
@@ -384,5 +461,18 @@ watch(symbol, () => {
   height: auto;
   min-width: 44px;
   font-size: 12px;
+}
+
+/* Remove focus/hover halo on v-slider thumb */
+:deep(.v-slider-thumb__surface::before) {
+  content: none !important;
+}
+
+:deep(.v-slider-thumb__ripple) {
+  display: none !important;
+}
+
+:deep(.amount-pct-slider .v-slider-thumb) {
+  --v-slider-thumb-size: 16px !important;
 }
 </style>
