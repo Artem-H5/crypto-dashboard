@@ -345,7 +345,12 @@ watch(symbol, () => {
                     class="mb-0"
                   >
                     <template #append-inner>
-                      <v-btn variant="text" size="x-small" @click="setMax">
+                      <v-btn
+                        variant="text"
+                        size="x-small"
+                        style="height: 60%"
+                        @click="setMax"
+                      >
                         All
                       </v-btn>
                     </template>
@@ -374,7 +379,18 @@ watch(symbol, () => {
                       type="number"
                       label="Amount"
                       hide-details
-                    />
+                    >
+                      <template #append-inner>
+                        <v-btn
+                          variant="tonal"
+                          size="small"
+                          style="height: 70%"
+                          @click="setMax"
+                        >
+                          ALL
+                        </v-btn>
+                      </template>
+                    </v-text-field>
 
                     <v-slider
                       v-model="amountPct"
@@ -390,15 +406,6 @@ watch(symbol, () => {
                         {{ modelValue }}%
                       </template>
                     </v-slider>
-
-                    <v-btn
-                      class="amount-all-btn"
-                      variant="tonal"
-                      size="small"
-                      @click="setMax"
-                    >
-                      ALL
-                    </v-btn>
                   </div>
                 </v-col>
               </v-row>
@@ -448,21 +455,6 @@ watch(symbol, () => {
 </template>
 
 <style scoped>
-.amount-wrapper {
-  position: relative;
-}
-
-.amount-all-btn {
-  position: absolute;
-  right: 8px;
-  top: 6px;
-  bottom: 6px;
-  transform: none;
-  height: auto;
-  min-width: 44px;
-  font-size: 12px;
-}
-
 /* Remove focus/hover halo on v-slider thumb */
 :deep(.v-slider-thumb__surface::before) {
   content: none !important;
@@ -474,5 +466,17 @@ watch(symbol, () => {
 
 :deep(.amount-pct-slider .v-slider-thumb) {
   --v-slider-thumb-size: 16px !important;
+}
+
+/* Hide number input arrows */
+:deep(input[type='number']::-webkit-outer-spin-button),
+:deep(input[type='number']::-webkit-inner-spin-button) {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+:deep(input[type='number']) {
+  -moz-appearance: textfield;
+  appearance: textfield;
 }
 </style>
