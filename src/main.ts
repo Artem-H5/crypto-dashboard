@@ -1,5 +1,7 @@
 import { createApp } from 'vue';
 import App from './App.vue';
+import Toast from 'vue-toastification';
+import 'vue-toastification/dist/index.css';
 import { router } from './router';
 
 import 'vuetify/lib/styles/main.css';
@@ -41,4 +43,4 @@ const vuetify = createVuetify({
 
 const pinia = createPinia();
 
-createApp(App).use(router).use(pinia).use(vuetify).mount('#app');
+createApp(App).use(router).use(Toast).use(pinia).use(vuetify).mount('#app');

@@ -6,6 +6,7 @@ import { useMarkets } from '../composables/useMarkets';
 import { useMarketChart } from '../composables/useMarketChart';
 import PriceChart from '../components/PriceChart.vue';
 import MarketMetrics from '../components/MarketMetrics.vue';
+import { useToast } from 'vue-toastification';
 
 const route = useRoute();
 const tradingStore = useTradingStore();
@@ -13,6 +14,8 @@ const tradingStore = useTradingStore();
 const { allMarkets, loading, error, loadMarkets } = useMarkets();
 
 const { loadMarketChart } = useMarketChart();
+
+const toast = useToast();
 
 const symbol = computed(() => String(route.params.symbol).toUpperCase());
 
@@ -34,7 +37,6 @@ const chartError = ref<string | null>(null);
 const type = ref<'BUY' | 'SELL'>('BUY');
 const price = ref(market.value?.price ?? 0);
 const amount = ref(0);
-const errorMessage = ref<string | null>(null);
 
 const currentPrice = computed<number>(() => {
   const lastPrice = chartPrices.value[chartPrices.value.length - 1];
@@ -88,10 +90,9 @@ const setMax = () => {
 
 const submitOrder = () => {
   if (!market.value) {
-    errorMessage.value = 'Market not found.';
+    toast.error('Market not found.');
     return;
   }
-
   const err = tradingStore.placeOrder({
     symbol: symbol.value,
     type: type.value,
@@ -100,9 +101,9 @@ const submitOrder = () => {
   });
 
   if (err) {
-    errorMessage.value = err;
+    toast.error(err);
   } else {
-    errorMessage.value = null;
+    toast.success('Order placed.');
     amount.value = 0;
   }
 };
@@ -116,7 +117,6 @@ watch(
 );
 
 watch(type, () => {
-  errorMessage.value = null;
   amount.value = 0;
 });
 
@@ -149,7 +149,6 @@ onMounted(() => {
 
 watch(symbol, () => {
   loadChartData();
-  errorMessage.value = null;
 });
 </script>
 
@@ -341,10 +340,6 @@ watch(symbol, () => {
             <strong>{{
               (tradingStore.balances['USDT'] ?? 0).toFixed(2)
             }}</strong>
-          </p>
-
-          <p v-if="errorMessage" class="mt-2" style="color: red">
-            {{ errorMessage }}
           </p>
         </v-card-text>
 
