@@ -59,7 +59,9 @@ const maxAmount = computed(() => {
   }
 
   if (type.value === 'BUY' && price.value > 0) {
-    return Number((usdtBalance / price.value).toFixed(6));
+    const precision = 1_000_000;
+    const raw = (usdtBalance / price.value) * precision;
+    return Math.floor(raw) / precision;
   }
 
   return 0;

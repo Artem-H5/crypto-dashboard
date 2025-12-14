@@ -74,6 +74,7 @@ export const useTradingStore = defineStore('trading', {
       }
 
       const total = price * amount;
+      const EPS = 1e-9;
 
       if (this.balances[symbol] === undefined) {
         this.balances[symbol] = 0;
@@ -81,7 +82,7 @@ export const useTradingStore = defineStore('trading', {
 
       if (type === 'BUY') {
         const usdtBalance = this.balances['USDT'] ?? 0;
-        if (usdtBalance < total) {
+        if (usdtBalance + EPS < total) {
           return 'Insufficient USDT to buy.';
         }
 
