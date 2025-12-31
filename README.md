@@ -1,6 +1,23 @@
 # Crypto Dashboard (Vue 3 + Vuetify)
 
+**Live Demo:** [https://crypto-dashboard99.vercel.app](https://crypto-dashboard99.vercel.app)
+
 A crypto dashboard built with Vue 3: markets list, coin details with chart + metrics, paper trading, and a portfolio overview.
+
+---
+
+## Screenshots
+
+<p>
+  <img src="public/screenshots/main-screen.png" width="49%" alt="Markets page" />
+  <img src="public/screenshots/coin-details.png" width="49%" alt="Market details page" />
+</p>
+
+<details>
+  <summary>Mobile preview</summary>
+  <br />
+  <img src="public/screenshots/mobile.png" width="320" alt="Mobile view" />
+</details>
 
 ---
 
@@ -21,10 +38,11 @@ A crypto dashboard built with Vue 3: markets list, coin details with chart + met
 - Portfolio: balances + trades history
 - Dark/Light theme
 - Responsive UI (mobile-friendly)
+- Error Handling: free API rate limits and network failures show a friendly message with Retry
 
 ---
 
-## Notes (implementation details)
+## Implementation details
 
 - Markets refresh: periodic refetch implemented in `src/pages/MarketsPage.vue`.
 - Portfolio persistence: stored in `localStorage` implemented in `src/stores/trading.ts`. To reset, remove the `portfolio` key.
